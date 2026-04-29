@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.keystore
+*.jks
+.env
+
+# Logs and runtime data
+*.log
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
