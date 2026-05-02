@@ -8,3 +8,4 @@ scrape_configs:
           - 'kafka-1:9991'
           - 'kafka-2:9992'
           - 'kafka-3:9993'
+          - 'kafka-4:9994'

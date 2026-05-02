@@ -30,6 +30,7 @@ services:
       KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9991:/opt/jmx-exporter/kafka-jmx.yml"
     volumes:
       - ./jmx-exporter:/opt/jmx-exporter
+      - ./admin:/admin 
 
   kafka-2:
     image: confluentinc/cp-kafka:7.5.0
@@ -53,6 +54,7 @@ services:
       KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9992:/opt/jmx-exporter/kafka-jmx.yml"
     volumes:
       - ./jmx-exporter:/opt/jmx-exporter
+      - ./admin:/admin
 
   kafka-3:
     image: confluentinc/cp-kafka:7.5.0
@@ -76,16 +78,41 @@ services:
       KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9993:/opt/jmx-exporter/kafka-jmx.yml"
     volumes:
       - ./jmx-exporter:/opt/jmx-exporter
+      - ./admin:/admin
+
+  kafka-4:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka-4
+    depends_on: [zookeeper]
+    ports:
+      - "9095:9095"
+      - "9994:9994"
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9095,PLAINTEXT_INTERNAL://0.0.0.0:29095
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9095,PLAINTEXT_INTERNAL://kafka-4:29095
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=9994:/opt/jmx-exporter/kafka-jmx.yml"
+    volumes:
+      - ./jmx-exporter:/opt/jmx-exporter
+      - ./admin:/admin
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
-    depends_on: [kafka-1, kafka-2, kafka-3]
+    depends_on: [kafka-1, kafka-2, kafka-3, kafka-4]
     ports:
       - "8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:29092,kafka-2:29093,kafka-3:29094
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:29092,kafka-2:29093,kafka-3:29094,kafka-4:29095
 
   prometheus:
     image: prom/prometheus:latest
@@ -106,3 +133,6 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+volumes:
+  grafana-data:
